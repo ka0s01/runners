@@ -107,7 +107,7 @@ thead .sticky{z-index:3;background:var(--card2)}
     </div>
     <div class="filters">
       <input id="q" type="search" placeholder="Search name or bib…" autocomplete="off">
-      <select id="sort"><option value="bib">Bib</option><option value="loops">Most loops</option><option value="name">Name</option></select>
+      <select id="sort"><option value="bib">Bib</option><option value="loops">Most loops</option><option value="time">Fastest avg loop</option><option value="name">Name</option></select>
     </div>
   </div>
 
@@ -192,6 +192,7 @@ function render(){
   list=list.slice();
   if(s==="bib" && tab==="all") list.sort((a,b)=>a.bib-b.bib);
   if(s==="loops") list.sort((a,b)=>b.count-a.count||a.bib-b.bib);
+  if(s==="time") list.sort((a,b)=>(a.avg??Infinity)-(b.avg??Infinity)||b.count-a.count);
   if(s==="name") list.sort((a,b)=>a.name.localeCompare(b.name));
   if(!list.length){wrap.innerHTML='<div class="msg">No runners found</div>';return}
   let maxLoop=3;
