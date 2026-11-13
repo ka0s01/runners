@@ -75,6 +75,8 @@ thead .sticky{z-index:3;background:var(--card2)}
 .t i{display:inline-block;padding:4px 9px;border-radius:8px;font-style:normal}
 .t.best i{outline:2px solid var(--hi);outline-offset:-2px;font-weight:800}
 .empty{color:var(--line)}
+.dns{color:var(--mut);font-style:italic;text-align:left}
+.dns i{font-style:normal;font-weight:700;font-size:12px;color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent);padding:4px 10px;border-radius:8px}
 .legend{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--mut);padding:14px 0 28px}
 .bar{width:90px;height:8px;border-radius:99px;background:linear-gradient(90deg,hsl(140,62%,50%),hsl(70,62%,50%),hsl(0,62%,52%))}
 .msg{padding:40px 20px;text-align:center;color:var(--mut)}
@@ -153,13 +155,14 @@ function build(csv){
   const runners=[];
   for(const r of rows.slice(2)){
     const bib=parseInt(r[0]); if(!bib) continue;
-    const loops=[];
+    const loops=[]; const DNS=/^(dns|d\.?n\.?s\.?|did\s*not\s*start|not\s*start(ed)?|no\s*show|ns|absent)$/i;
+    const dns=r.slice(3).some(c=>DNS.test((c||"").trim()));
     for(let i=3;i<r.length;i++){
       const mins=parseTime(r[i]);
       loops.push(mins!=null?{mins}:null);
     }
     const done=loops.filter(Boolean);
-    runners.push({bib,nick:r[1]||"",name:r[2]||r[1]||"",loops,count:done.length,
+    runners.push({dns,bib,nick:r[1]||"",name:r[2]||r[1]||"",loops,count:done.length,
       best:done.length?Math.min(...done.map(x=>x.mins)):null,
       avg:done.length?done.reduce((a,x)=>a+x.mins,0)/done.length:null});
   }
@@ -173,7 +176,7 @@ function color(mins,lo,hi){
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
 function stats(){
-  const top=data.runners.filter(r=>r.count)
+  const top=data.runners.filter(r=>r.count&&!r.dns)
     .map(r=>({...r,total:r.loops.filter(Boolean).reduce((a,x)=>a+x.mins,0)}))
     .sort((a,b)=>b.count-a.count||a.total-b.total).slice(0,5);
   document.getElementById("lb").innerHTML=top.length?top.map((r,i)=>
@@ -203,6 +206,7 @@ function render(){
   h+='</tr></thead><tbody>';
   for(const r of list){
     h+=`<tr><td class="sticky"><div class="runner"><span class="bibtag">${r.bib}</span><span class="name">${esc(r.name)}</span></div></td>`;
+    if(r.dns){h+=`<td colspan="${maxLoop+3}" class="dns"><i>Did not start</i></td></tr>`;continue}
     h+=`<td class="loops ${r.count?"":"zero"}">${r.count}</td><td class="sub">${r.best!=null?fmt(r.best):"–"}</td><td class="sub">${r.avg!=null?fmt(r.avg):"–"}</td>`;
     for(let i=0;i<maxLoop;i++){
       const x=r.loops[i];
