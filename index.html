@@ -3,17 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0e14">
+<meta name="theme-color" content="#f0eee6">
 <title>Chennai Runners BBU 2026</title>
 <style>
 :root{
-  --bg:#f4f6fa;--card:#fff;--card2:#f8f9fc;--line:#e4e8f0;--txt:#111827;--mut:#6b7280;
-  --acc:#2563eb;--acc2:#7c3aed;--hi:#f59e0b;--ok:#16a34a;--bad:#dc2626;--shadow:0 1px 3px rgba(16,24,40,.08),0 4px 16px rgba(16,24,40,.05);
-  --heat-s:62%;--heat-l:50%;--heat-a:.28;
+  --bg:#f0eee6;--card:#faf9f5;--card2:#f5f3ea;--line:#e3dfd2;--txt:#141413;--mut:#73726c;
+  --acc:#c15f3c;--hi:#c15f3c;--ok:#4d8a5b;--bad:#b3402e;--shadow:none;--heat-a:.3;
 }
 @media (prefers-color-scheme: dark){:root{
-  --bg:#0b0e14;--card:#141923;--card2:#0f131b;--line:#232a38;--txt:#eef1f7;--mut:#8a93a6;
-  --acc:#5b9dff;--acc2:#a78bfa;--hi:#fbbf24;--ok:#34d399;--bad:#f87171;--shadow:none;--heat-a:.4;
+  --bg:#262624;--card:#30302e;--card2:#2a2a28;--line:#444340;--txt:#faf9f5;--mut:#a8a69d;
+  --acc:#d97757;--hi:#d97757;--ok:#7fb88a;--bad:#e5806b;--shadow:none;--heat-a:.4;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
@@ -23,17 +22,16 @@ body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 -apple-system
 /* hero */
 .hero{padding:22px 0 14px}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
-h1{margin:2px 0 0;font-size:clamp(22px,5vw,32px);line-height:1.1;font-weight:800;letter-spacing:-.02em;
-  background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.eyebrow{color:var(--acc)!important;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
+h1{margin:2px 0 0;font-family:Georgia,"Times New Roman",serif;font-size:clamp(24px,5.5vw,34px);line-height:1.1;font-weight:500;letter-spacing:-.01em;color:var(--txt)}
 .live{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--mut);white-space:nowrap;box-shadow:var(--shadow)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:pulse 2s infinite}
 .dot.err{background:var(--bad);animation:none}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(77,138,91,.5)}70%{box-shadow:0 0 0 7px rgba(77,138,91,0)}100%{box-shadow:0 0 0 0 rgba(77,138,91,0)}}
 
 /* leaderboard */
 .lb{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
-.lb h2{margin:0;padding:12px 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;border-bottom:1px solid var(--line)}
+.lb h2{font-family:inherit;margin:0;padding:12px 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;border-bottom:1px solid var(--line)}
 .lbrow{display:grid;grid-template-columns:28px 1fr auto auto;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .lbrow:last-child{border-bottom:0}
 .rk{font-weight:800;color:var(--mut);text-align:center}
@@ -44,10 +42,10 @@ h1{margin:2px 0 0;font-size:clamp(22px,5vw,32px);line-height:1.1;font-weight:800
 .lbt{font-variant-numeric:tabular-nums;color:var(--mut);font-size:14px;text-align:right;min-width:62px}
 
 /* controls */
-.controls{position:sticky;top:0;z-index:10;background:linear-gradient(var(--bg) 85%,transparent);padding:10px 0 8px}
+.controls{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0 8px}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;box-shadow:var(--shadow)}
 .tab{border:0;background:none;color:var(--mut);font:600 14px inherit;padding:10px;border-radius:9px;cursor:pointer;transition:.15s}
-.tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 2px 8px rgba(91,80,230,.35)}
+.tab.on{background:var(--acc);color:#fff}
 .filters{display:flex;gap:8px;margin-top:8px}
 input,select{font:inherit;font-size:14px;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none;box-shadow:var(--shadow)}
 input{flex:1;min-width:0}
