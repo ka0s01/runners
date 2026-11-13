@@ -31,11 +31,17 @@ h1{margin:2px 0 0;font-size:clamp(22px,5vw,32px);line-height:1.1;font-weight:800
 .dot.err{background:var(--bad);animation:none}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);min-width:0}
-.stat b{display:block;font-size:clamp(18px,4.5vw,26px);font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+/* leaderboard */
+.lb{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.lb h2{margin:0;padding:12px 14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;border-bottom:1px solid var(--line)}
+.lbrow{display:grid;grid-template-columns:28px 1fr auto auto;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.lbrow:last-child{border-bottom:0}
+.rk{font-weight:800;color:var(--mut);text-align:center}
+.lbrow:nth-child(2) .rk{color:#d4a017}.lbrow:nth-child(3) .rk{color:#9ca3af}.lbrow:nth-child(4) .rk{color:#b87333}
+.lbn{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbn small{color:var(--mut);font-weight:700;margin-right:6px}
+.lbl{font-weight:800;font-size:17px;text-align:right}.lbl small{font-size:11px;color:var(--mut);font-weight:600;margin-left:3px}
+.lbt{font-variant-numeric:tabular-nums;color:var(--mut);font-size:14px;text-align:right;min-width:62px}
 
 /* controls */
 .controls{position:sticky;top:0;z-index:10;background:linear-gradient(var(--bg) 85%,transparent);padding:10px 0 8px}
@@ -91,11 +97,7 @@ thead .sticky{z-index:3;background:var(--card2)}
       </div>
       <div class="live"><span class="dot" id="dot"></span><span id="upd">loading…</span></div>
     </div>
-    <div class="stats">
-      <div class="stat"><b id="s-run">–</b><span>Runners</span></div>
-      <div class="stat"><b id="s-loops">–</b><span>Total loops</span></div>
-      <div class="stat"><b id="s-lead">–</b><span>Most loops</span></div>
-    </div>
+    <div class="lb"><h2>Leaderboard · Top 5</h2><div id="lb"><div class="msg" style="padding:16px">No loops logged yet</div></div></div>
   </section>
 
   <div class="controls">
@@ -171,11 +173,12 @@ function color(mins,lo,hi){
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
 function stats(){
-  const rs=data.runners, total=rs.reduce((a,r)=>a+r.count,0);
-  const max=Math.max(0,...rs.map(r=>r.count));
-  document.getElementById("s-run").textContent=rs.length;
-  document.getElementById("s-loops").textContent=total;
-  document.getElementById("s-lead").textContent=max;
+  const top=data.runners.filter(r=>r.count)
+    .map(r=>({...r,total:r.loops.filter(Boolean).reduce((a,x)=>a+x.mins,0)}))
+    .sort((a,b)=>b.count-a.count||a.total-b.total).slice(0,5);
+  document.getElementById("lb").innerHTML=top.length?top.map((r,i)=>
+    `<div class="lbrow"><span class="rk">${i+1}</span><span class="lbn"><small>#${r.bib}</small>${esc(r.name)}</span><span class="lbl">${r.count}<small>loops</small></span><span class="lbt">${fmt(r.total)}</span></div>`).join("")
+    :'<div class="msg" style="padding:16px">No loops logged yet</div>';
 }
 function render(){
   const wrap=document.getElementById("wrap");
