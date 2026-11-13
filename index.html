@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop Tracker</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#262a33;--txt:#e8eaf0;--mut:#8b92a3;--acc:#4da3ff;--hi:#ffd54a}
+@media (prefers-color-scheme: light){:root{--bg:#f5f6f8;--card:#fff;--line:#dfe2e8;--txt:#14171c;--mut:#6a7282;--acc:#1769d6;--hi:#b78600}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 12px 0;border-bottom:1px solid var(--line)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:18px;margin:0}
+#status{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#2ecc71}
+.dot.err{background:#e74c3c}
+.row{display:flex;gap:8px;margin:8px 0;align-items:center}
+.tabs{display:flex;gap:4px}
+.tab{flex:1;padding:10px;border:0;background:var(--card);color:var(--mut);font-weight:600;font-size:15px;border-radius:8px 8px 0 0;cursor:pointer}
+.tab.on{color:var(--txt);box-shadow:inset 0 -3px var(--acc)}
+input,select{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px}
+input{flex:1;min-width:0}
+.wrap{overflow:auto;padding:0 0 40px;max-height:calc(100vh - 150px)}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th,td{padding:8px 10px;white-space:nowrap;border-bottom:1px solid var(--line);text-align:center}
+thead th{position:sticky;top:0;background:var(--card);z-index:2;font-size:12px;color:var(--mut)}
+thead th small{display:block;font-weight:400}
+.sticky{position:sticky;left:0;background:var(--card);text-align:left;z-index:1;border-right:1px solid var(--line)}
+thead .sticky{z-index:3}
+.bib{color:var(--mut);font-size:12px;margin-right:6px}
+.name{font-weight:600}
+.loops{font-weight:700;font-size:17px;color:var(--acc)}
+.t{font-variant-numeric:tabular-nums;font-weight:600}
+.empty{color:var(--line)}
+.best{outline:2px solid var(--hi);outline-offset:-2px}
+.meta{font-size:11px;color:var(--mut)}
+.msg{padding:30px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><h1>🏃 Loop Tracker</h1><div id="status"><span class="dot" id="dot"></span><span id="upd">loading…</span></div></div>
+  <div class="row"><input id="q" type="search" placeholder="Search name or bib"><select id="sort"><option value="bib">Sort: Bib</option><option value="loops">Sort: Most loops</option><option value="name">Sort: Name</option></select></div>
+  <div class="tabs"><button class="tab on" data-tab="all">Everyone</button><button class="tab" data-tab="fav">Watchlist</button></div>
+</header>
+<div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
+
+<script>
+const WATCH = [10,12,16,40,55,54,25,53,51,20];
+const REFRESH_MS = 15000;
+let tab = "all", data = null;
+
+function parseCSV(s){
+  const rows=[];let r=[],c="",q=false;
+  for(let i=0;i<s.length;i++){const ch=s[i];
+    if(q){ if(ch=='"'){ if(s[i+1]=='"'){c+='"';i++} else q=false } else c+=ch }
+    else if(ch=='"') q=true;
+    else if(ch==',') {r.push(c);c=""}
+    else if(ch=='\n'){r.push(c);rows.push(r);r=[];c=""}
+    else if(ch!='\r') c+=ch;
+  }
+  if(c||r.length){r.push(c);rows.push(r)}
+  return rows;
+}
+// returns minutes (number) or null
+function parseTime(v){
+  v=(v||"").trim().toLowerCase();
+  if(!v||v.startsWith("e.g")) return null;
+  let m=v.match(/^(\d+):(\d+):(\d+)$/); if(m) return +m[1]*60+ +m[2]+ +m[3]/60;
+  m=v.match(/^(\d+):(\d+)$/); if(m) return +m[1]+ +m[2]/60;
+  m=v.match(/^(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hour|hours)\s*(?:(\d+)\s*(?:m|min|mins)?)?$/); if(m) return +m[1]*60+(+m[2]||0);
+  m=v.match(/(\d+(?:\.\d+)?)\s*(?:m|min|mins|minutes)?\s*(?:(\d+)\s*s)?/); if(m) return +m[1]+(+m[2]||0)/60;
+  return null;
+}
+function fmt(min){
+  const tot=Math.round(min*60), h=Math.floor(tot/3600), m=Math.floor(tot%3600/60), s=tot%60;
+  if(h) return `${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return s? `${m}:${String(s).padStart(2,"0")}` : `${m} min`;
+}
+function build(csv){
+  const rows=parseCSV(csv);
+  const hours=rows[0].slice(3), labels=rows[1].slice(3);
+  const runners=[];
+  for(const r of rows.slice(2)){
+    const bib=parseInt(r[0]); if(!bib) continue;
+    const loops=[];
+    for(let i=3;i<r.length;i++){
+      const mins=parseTime(r[i]);
+      loops.push(mins!=null?{mins}:null);
+    }
+    const done=loops.filter(Boolean);
+    runners.push({bib,nick:r[1]||"",name:r[2]||r[1]||"",loops,count:done.length,
+      best:done.length?Math.min(...done.map(x=>x.mins)):null,
+      avg:done.length?done.reduce((a,x)=>a+x.mins,0)/done.length:null});
+  }
+  return {hours,labels,runners};
+}
+function color(mins,lo,hi){
+  if(hi-lo<0.01) return "hsla(140,60%,45%,.35)";
+  const t=(mins-lo)/(hi-lo); // 0 fast..1 slow
+  return `hsla(${140-140*t},65%,45%,.38)`;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){
+  const wrap=document.getElementById("wrap");
+  if(!data) return;
+  let list=data.runners;
+  if(tab==="fav") list=WATCH.map(b=>list.find(r=>r.bib===b)).filter(Boolean);
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  if(q) list=list.filter(r=>String(r.bib)===q||(r.name+" "+r.nick).toLowerCase().includes(q));
+  const s=document.getElementById("sort").value;
+  list=list.slice();
+  // Watchlist keeps the order you listed unless a sort is chosen
+  if(s==="bib" && tab==="all") list.sort((a,b)=>a.bib-b.bib);
+  if(s==="loops") list.sort((a,b)=>b.count-a.count||a.bib-b.bib);
+  if(s==="name") list.sort((a,b)=>a.name.localeCompare(b.name));
+  if(!list.length){wrap.innerHTML='<div class="msg">No runners found</div>';return}
+  let maxLoop=3;
+  for(const r of list) for(let i=0;i<r.loops.length;i++) if(r.loops[i]) maxLoop=Math.max(maxLoop,i+1);
+  maxLoop=Math.min(maxLoop+1, data.labels.length);
+  const all=list.flatMap(r=>r.loops.filter(Boolean).map(x=>x.mins));
+  const lo=all.length?Math.min(...all):0, hi=all.length?Math.max(...all):0;
+  let h='<table><thead><tr><th class="sticky">Runner</th><th>Loops</th><th>Best</th><th>Avg</th>';
+  for(let i=0;i<maxLoop;i++) h+=`<th>${esc((data.labels[i]||"").replace("Loop ","L"))}<small>${esc(data.hours[i]||"")}</small></th>`;
+  h+='</tr></thead><tbody>';
+  for(const r of list){
+    h+=`<tr><td class="sticky"><span class="bib">#${r.bib}</span><span class="name">${esc(r.name)}</span></td>`;
+    h+=`<td class="loops">${r.count}</td><td>${r.best!=null?fmt(r.best):"–"}</td><td>${r.avg!=null?fmt(r.avg):"–"}</td>`;
+    for(let i=0;i<maxLoop;i++){
+      const x=r.loops[i];
+      if(!x) h+='<td class="empty">·</td>';
+      else h+=`<td class="t ${x.mins===r.best?"best":""}" style="background:${color(x.mins,lo,hi)}">${fmt(x.mins)}</td>`;
+    }
+    h+='</tr>';
+  }
+  h+='</tbody></table><div class="msg meta">Cell colour: green = faster, red = slower. Outlined = runner\'s best loop.</div>';
+  const sx=wrap.scrollLeft, sy=wrap.scrollTop;
+  wrap.innerHTML=h; wrap.scrollLeft=sx; wrap.scrollTop=sy;
+}
+async function load(){
+  const dot=document.getElementById("dot"), upd=document.getElementById("upd");
+  try{
+    const r=await fetch("/api/sheet",{cache:"no-store"});
+    if(!r.ok) throw new Error(r.status);
+    data=build(await r.text());
+    dot.classList.remove("err"); upd.textContent="Updated "+new Date().toLocaleTimeString();
+    render();
+  }catch(e){
+    dot.classList.add("err"); upd.textContent="Offline – retrying";
+    if(!data) document.getElementById("wrap").innerHTML='<div class="msg">Could not load data. Retrying…</div>';
+  }
+}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  tab=b.dataset.tab;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));render()});
+document.getElementById("q").oninput=render;
+document.getElementById("sort").onchange=render;
+load(); setInterval(load,REFRESH_MS);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+</script>
+</body>
+</html>
