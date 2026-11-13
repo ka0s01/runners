@@ -2,49 +2,116 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>Chennai Runners BBU 2026</title>
 <style>
-:root{--bg:#0f1115;--card:#181b22;--line:#262a33;--txt:#e8eaf0;--mut:#8b92a3;--acc:#4da3ff;--hi:#ffd54a}
-@media (prefers-color-scheme: light){:root{--bg:#f5f6f8;--card:#fff;--line:#dfe2e8;--txt:#14171c;--mut:#6a7282;--acc:#1769d6;--hi:#b78600}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 12px 0;border-bottom:1px solid var(--line)}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-h1{font-size:18px;margin:0}
-#status{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px}
-.dot{width:8px;height:8px;border-radius:50%;background:#2ecc71}
-.dot.err{background:#e74c3c}
-.row{display:flex;gap:8px;margin:8px 0;align-items:center}
-.tabs{display:flex;gap:4px}
-.tab{flex:1;padding:10px;border:0;background:var(--card);color:var(--mut);font-weight:600;font-size:15px;border-radius:8px 8px 0 0;cursor:pointer}
-.tab.on{color:var(--txt);box-shadow:inset 0 -3px var(--acc)}
-input,select{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px}
+:root{
+  --bg:#f4f6fa;--card:#fff;--card2:#f8f9fc;--line:#e4e8f0;--txt:#111827;--mut:#6b7280;
+  --acc:#2563eb;--acc2:#7c3aed;--hi:#f59e0b;--ok:#16a34a;--bad:#dc2626;--shadow:0 1px 3px rgba(16,24,40,.08),0 4px 16px rgba(16,24,40,.05);
+  --heat-s:62%;--heat-l:50%;--heat-a:.28;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0b0e14;--card:#141923;--card2:#0f131b;--line:#232a38;--txt:#eef1f7;--mut:#8a93a6;
+  --acc:#5b9dff;--acc2:#a78bfa;--hi:#fbbf24;--ok:#34d399;--bad:#f87171;--shadow:none;--heat-a:.4;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+.app{max-width:1200px;margin:0 auto;padding:0 16px}
+
+/* hero */
+.hero{padding:22px 0 14px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
+h1{margin:2px 0 0;font-size:clamp(22px,5vw,32px);line-height:1.1;font-weight:800;letter-spacing:-.02em;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.live{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--mut);white-space:nowrap;box-shadow:var(--shadow)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:pulse 2s infinite}
+.dot.err{background:var(--bad);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);min-width:0}
+.stat b{display:block;font-size:clamp(18px,4.5vw,26px);font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+
+/* controls */
+.controls{position:sticky;top:0;z-index:10;background:linear-gradient(var(--bg) 85%,transparent);padding:10px 0 8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;box-shadow:var(--shadow)}
+.tab{border:0;background:none;color:var(--mut);font:600 14px inherit;padding:10px;border-radius:9px;cursor:pointer;transition:.15s}
+.tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 2px 8px rgba(91,80,230,.35)}
+.filters{display:flex;gap:8px;margin-top:8px}
+input,select{font:inherit;font-size:14px;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none;box-shadow:var(--shadow)}
 input{flex:1;min-width:0}
-.wrap{overflow:auto;padding:0 0 40px;max-height:calc(100vh - 150px)}
-table{border-collapse:separate;border-spacing:0;width:100%}
-th,td{padding:8px 10px;white-space:nowrap;border-bottom:1px solid var(--line);text-align:center}
-thead th{position:sticky;top:0;background:var(--card);z-index:2;font-size:12px;color:var(--mut)}
-thead th small{display:block;font-weight:400}
-.sticky{position:sticky;left:0;background:var(--card);text-align:left;z-index:1;border-right:1px solid var(--line)}
-thead .sticky{z-index:3}
-.bib{color:var(--mut);font-size:12px;margin-right:6px}
-.name{font-weight:600}
-.loops{font-weight:700;font-size:17px;color:var(--acc)}
-.t{font-variant-numeric:tabular-nums;font-weight:600}
+input:focus,select:focus{border-color:var(--acc)}
+
+/* table */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-top:6px}
+.wrap{overflow:auto;max-height:calc(100vh - 230px);min-height:200px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:11px 12px;white-space:nowrap;text-align:center;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td:not(.t){background:var(--card2)}
+thead th{position:sticky;top:0;z-index:2;background:var(--card2);font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding-top:10px;padding-bottom:10px}
+thead th small{display:block;font-weight:500;text-transform:none;letter-spacing:0;opacity:.8}
+.sticky{position:sticky;left:0;z-index:1;background:var(--card);text-align:left;min-width:150px;max-width:190px;border-right:1px solid var(--line)}
+tbody tr:hover .sticky{background:var(--card2)}
+thead .sticky{z-index:3;background:var(--card2)}
+.runner{display:flex;align-items:center;gap:10px}
+.bibtag{flex:none;min-width:34px;text-align:center;font-size:12px;font-weight:700;color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);padding:3px 7px;border-radius:7px}
+.name{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.loops{font-weight:800;font-size:18px;color:var(--txt)}
+.loops.zero{color:var(--line)}
+.sub{color:var(--mut);font-size:13px}
+.t{font-weight:600;font-size:13.5px}
+.t i{display:inline-block;padding:4px 9px;border-radius:8px;font-style:normal}
+.t.best i{outline:2px solid var(--hi);outline-offset:-2px;font-weight:800}
 .empty{color:var(--line)}
-.best{outline:2px solid var(--hi);outline-offset:-2px}
-.meta{font-size:11px;color:var(--mut)}
-.msg{padding:30px;text-align:center;color:var(--mut)}
+.legend{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--mut);padding:14px 0 28px}
+.bar{width:90px;height:8px;border-radius:99px;background:linear-gradient(90deg,hsl(140,62%,50%),hsl(70,62%,50%),hsl(0,62%,52%))}
+.msg{padding:40px 20px;text-align:center;color:var(--mut)}
+.pill{display:inline-block;width:10px;height:10px;border-radius:3px;outline:2px solid var(--hi);outline-offset:-2px;margin-left:10px}
+@media (max-width:520px){
+  .app{padding:0 10px}
+  th,td{padding:10px 9px}
+  .sticky{min-width:128px;max-width:140px}
+  .live span.t-label{display:none}
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="top"><h1>🏃 Loop Tracker</h1><div id="status"><span class="dot" id="dot"></span><span id="upd">loading…</span></div></div>
-  <div class="row"><input id="q" type="search" placeholder="Search name or bib"><select id="sort"><option value="bib">Sort: Bib</option><option value="loops">Sort: Most loops</option><option value="name">Sort: Name</option></select></div>
-  <div class="tabs"><button class="tab on" data-tab="all">Everyone</button><button class="tab" data-tab="fav">Watchlist</button></div>
-</header>
-<div class="wrap" id="wrap"><div class="msg">Loading…</div></div>
+<div class="app">
+  <section class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">Live loop tracker</div>
+        <h1>Chennai Runners BBU 2026</h1>
+      </div>
+      <div class="live"><span class="dot" id="dot"></span><span id="upd">loading…</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="s-run">–</b><span>Runners</span></div>
+      <div class="stat"><b id="s-loops">–</b><span>Total loops</span></div>
+      <div class="stat"><b id="s-lead">–</b><span>Most loops</span></div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <div class="seg">
+      <button class="tab on" data-tab="all">Everyone</button>
+      <button class="tab" data-tab="fav">Watchlist</button>
+    </div>
+    <div class="filters">
+      <input id="q" type="search" placeholder="Search name or bib…" autocomplete="off">
+      <select id="sort"><option value="bib">Bib</option><option value="loops">Most loops</option><option value="name">Name</option></select>
+    </div>
+  </div>
+
+  <div class="card"><div class="wrap" id="wrap"><div class="msg">Loading…</div></div></div>
+  <div class="legend">Faster <span class="bar"></span> Slower <span class="pill"></span> Personal best</div>
+</div>
 
 <script>
 const WATCH = [10,12,16,40,55,54,25,53,51,20];
@@ -97,11 +164,19 @@ function build(csv){
   return {hours,labels,runners};
 }
 function color(mins,lo,hi){
-  if(hi-lo<0.01) return "hsla(140,60%,45%,.35)";
-  const t=(mins-lo)/(hi-lo); // 0 fast..1 slow
-  return `hsla(${140-140*t},65%,45%,.38)`;
+  const t=hi-lo<0.01?0:(mins-lo)/(hi-lo); // 0 fast..1 slow
+  const a=getComputedStyle(document.documentElement).getPropertyValue("--heat-a")||.3;
+  return `hsla(${Math.round(140-140*t)},62%,50%,${a})`;
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function stats(){
+  const rs=data.runners, total=rs.reduce((a,r)=>a+r.count,0);
+  const max=Math.max(0,...rs.map(r=>r.count));
+  document.getElementById("s-run").textContent=rs.length;
+  document.getElementById("s-loops").textContent=total;
+  document.getElementById("s-lead").textContent=max;
+}
 function render(){
   const wrap=document.getElementById("wrap");
   if(!data) return;
@@ -111,7 +186,6 @@ function render(){
   if(q) list=list.filter(r=>String(r.bib)===q||(r.name+" "+r.nick).toLowerCase().includes(q));
   const s=document.getElementById("sort").value;
   list=list.slice();
-  // Watchlist keeps the order you listed unless a sort is chosen
   if(s==="bib" && tab==="all") list.sort((a,b)=>a.bib-b.bib);
   if(s==="loops") list.sort((a,b)=>b.count-a.count||a.bib-b.bib);
   if(s==="name") list.sort((a,b)=>a.name.localeCompare(b.name));
@@ -122,19 +196,19 @@ function render(){
   const all=list.flatMap(r=>r.loops.filter(Boolean).map(x=>x.mins));
   const lo=all.length?Math.min(...all):0, hi=all.length?Math.max(...all):0;
   let h='<table><thead><tr><th class="sticky">Runner</th><th>Loops</th><th>Best</th><th>Avg</th>';
-  for(let i=0;i<maxLoop;i++) h+=`<th>${esc((data.labels[i]||"").replace("Loop ","L"))}<small>${esc(data.hours[i]||"")}</small></th>`;
+  for(let i=0;i<maxLoop;i++) h+=`<th>${esc((data.labels[i]||"").replace("Loop ","Loop "))}<small>${esc(data.hours[i]||"")}</small></th>`;
   h+='</tr></thead><tbody>';
   for(const r of list){
-    h+=`<tr><td class="sticky"><span class="bib">#${r.bib}</span><span class="name">${esc(r.name)}</span></td>`;
-    h+=`<td class="loops">${r.count}</td><td>${r.best!=null?fmt(r.best):"–"}</td><td>${r.avg!=null?fmt(r.avg):"–"}</td>`;
+    h+=`<tr><td class="sticky"><div class="runner"><span class="bibtag">${r.bib}</span><span class="name">${esc(r.name)}</span></div></td>`;
+    h+=`<td class="loops ${r.count?"":"zero"}">${r.count}</td><td class="sub">${r.best!=null?fmt(r.best):"–"}</td><td class="sub">${r.avg!=null?fmt(r.avg):"–"}</td>`;
     for(let i=0;i<maxLoop;i++){
       const x=r.loops[i];
       if(!x) h+='<td class="empty">·</td>';
-      else h+=`<td class="t ${x.mins===r.best?"best":""}" style="background:${color(x.mins,lo,hi)}">${fmt(x.mins)}</td>`;
+      else h+=`<td class="t ${x.mins===r.best?"best":""}"><i style="background:${color(x.mins,lo,hi)}">${fmt(x.mins)}</i></td>`;
     }
     h+='</tr>';
   }
-  h+='</tbody></table><div class="msg meta">Cell colour: green = faster, red = slower. Outlined = runner\'s best loop.</div>';
+  h+='</tbody></table>';
   const sx=wrap.scrollLeft, sy=wrap.scrollTop;
   wrap.innerHTML=h; wrap.scrollLeft=sx; wrap.scrollTop=sy;
 }
@@ -144,8 +218,8 @@ async function load(){
     const r=await fetch("/api/sheet",{cache:"no-store"});
     if(!r.ok) throw new Error(r.status);
     data=build(await r.text());
-    dot.classList.remove("err"); upd.textContent="Updated "+new Date().toLocaleTimeString();
-    render();
+    dot.classList.remove("err"); upd.textContent="Live · "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    stats(); render();
   }catch(e){
     dot.classList.add("err"); upd.textContent="Offline – retrying";
     if(!data) document.getElementById("wrap").innerHTML='<div class="msg">Could not load data. Retrying…</div>';
